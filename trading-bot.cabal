@@ -6,36 +6,20 @@ cabal-version: 2.2
 
 name:           trading-bot
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/githubuser/trading-bot#readme>
-homepage:       https://github.com/githubuser/trading-bot#readme
-bug-reports:    https://github.com/githubuser/trading-bot/issues
-author:         Author name here
-maintainer:     example@example.com
-copyright:      2025 Author name here
+description:    Please see the README on GitHub at <https://github.com/Fxynos/Trading-Bot#readme>
+homepage:       https://github.com/Fxynos/Trading-Bot#readme
+bug-reports:    https://github.com/Fxynos/Trading-Bot/issues
+author:         Tsoi Vladislav
+maintainer:     sinerechka0000@gmail.com
+copyright:      2025 Tsoi Vladislav
 license:        BSD-3-Clause
-license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
     README.md
-    CHANGELOG.md
 
 source-repository head
   type: git
-  location: https://github.com/githubuser/trading-bot
-
-library
-  exposed-modules:
-      Lib
-  other-modules:
-      Paths_trading_bot
-  autogen-modules:
-      Paths_trading_bot
-  hs-source-dirs:
-      src
-  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
-  build-depends:
-      base >=4.7 && <5
-  default-language: Haskell2010
+  location: https://github.com/Fxynos/Trading-Bot
 
 executable trading-bot-exe
   main-is: Main.hs
@@ -44,11 +28,11 @@ executable trading-bot-exe
   autogen-modules:
       Paths_trading_bot
   hs-source-dirs:
-      app
+      src
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
-    , trading-bot
+    , http-conduit >=2.3.9
   default-language: Haskell2010
 
 test-suite trading-bot-test
@@ -63,5 +47,4 @@ test-suite trading-bot-test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
-    , trading-bot
   default-language: Haskell2010
