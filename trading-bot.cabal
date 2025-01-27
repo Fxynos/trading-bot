@@ -24,6 +24,17 @@ source-repository head
 executable trading-bot-exe
   main-is: Main.hs
   other-modules:
+      Data.Actor.CoinExExchange
+      Data.Actor.FileStateDataSource
+      Data.Actor.GridBot
+      Data.Utils
+      Domain.Actor.Bot
+      Domain.Actor.Exchange
+      Domain.Actor.StateDataSource
+      Domain.Entity.Amount
+      Domain.Entity.Currency
+      Domain.Entity.Market
+      Domain.Entity.State
       Paths_trading_bot
   autogen-modules:
       Paths_trading_bot
