@@ -42,6 +42,8 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - http-conduit >= 2.3.9
+    - bytestring >= 0.12.1.0
+    - aeson >= 2.2.3.0
 
 tests:
   trading-bot-test:
