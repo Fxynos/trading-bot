@@ -1,12 +1,17 @@
-module Data.Network (makeRequest, RequestParams(..)) where
+{-# LANGUAGE OverloadedStrings, DeriveGeneric, ScopedTypeVariables #-}
+
+module Data.Network (makeRequest, RequestParams(..), StatusResponse(..)) where
 
 import Data.ByteString
 import Control.Monad.IO.Class
+import GHC.Generics
 import Data.Aeson.Types
 import Network.HTTP.Simple
 
-makeRequest :: (MonadIO m, FromJSON r) => RequestParams -> m (Response r)
-makeRequest params = httpJSON $ createRequest params
+makeRequest :: forall r m. (MonadIO m, FromJSON r) => RequestParams -> m r
+makeRequest params = do
+    response <- liftIO $ httpJSON $ createRequest params :: m (Response r)
+    return $ getResponseBody response
 
 createRequest :: RequestParams -> Request
 createRequest params =
@@ -20,3 +25,20 @@ data RequestParams = RequestParams {
     headers :: [(String, String)],
     body :: Maybe String
 }
+
+data StatusResponse payload = StatusResponse {
+    code :: Int,
+    message :: String,
+    payload :: payload
+} deriving (Show, Generic)
+
+instance (FromJSON payload) => FromJSON (StatusResponse payload) where
+    parseJSON = withObject "StatusResponse" $ \o -> do
+        code <- o .: "code"
+        message <- o .: "message"
+        payload <- o .: "data"
+        return StatusResponse {
+            code = code,
+            message = message,
+            payload = payload
+        }
