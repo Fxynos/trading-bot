@@ -26,6 +26,8 @@ data RequestParams = RequestParams {
     body :: Maybe String
 }
 
+-- DTO's --
+
 data StatusResponse payload = StatusResponse {
     code :: Int,
     message :: String,

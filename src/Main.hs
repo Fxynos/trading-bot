@@ -6,5 +6,7 @@ import Data.Actor.CoinExExchange as CoinExExchange
 
 main :: IO ()
 main = do
-    result <- CoinExExchange.ping
-    print result
+    pong <- CoinExExchange.ping
+    putStrLn $ "/ping: " ++ pong
+    timestamp <- CoinExExchange.systemTime
+    putStrLn $ "/time: " ++ (show timestamp)
