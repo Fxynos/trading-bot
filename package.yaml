@@ -42,6 +42,7 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - http-conduit >= 2.3.9
+    - case-insensitive >= 1.2.1.0
     - bytestring >= 0.12.1.0
     - aeson >= 2.2.3.0
     - SHA >= 1.6.4.4

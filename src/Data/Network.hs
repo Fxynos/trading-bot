@@ -2,7 +2,10 @@
 
 module Data.Network (makeRequest, RequestParams(..), StatusResponse(..)) where
 
+import Data.Utils (byteString)
+
 import Data.ByteString
+import Data.CaseInsensitive
 import Control.Monad.IO.Class
 import GHC.Generics
 import Data.Aeson.Types
@@ -16,6 +19,7 @@ makeRequest params = do
 createRequest :: RequestParams -> Request
 createRequest params =
     setRequestMethod (method params) $
+    setRequestHeaders [(mk $ byteString key, byteString value) | (key, value) <- headers params] $
     parseRequest_ $ url params
 
 data RequestParams = RequestParams {
