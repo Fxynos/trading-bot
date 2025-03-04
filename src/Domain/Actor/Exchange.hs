@@ -8,6 +8,6 @@ import Control.Monad.IO.Class
 
 class Exchange e where
     getBalance :: (MonadIO m) => e -> m [Amount]
-    getRate :: e -> Currency -> Currency -> Amount
+    getRate :: (MonadIO m) => e -> Currency -> Currency -> m Amount
     getMarket :: e -> Currency -> Currency -> Market
     placeSpotOrder :: e -> Amount -> Currency -> Amount

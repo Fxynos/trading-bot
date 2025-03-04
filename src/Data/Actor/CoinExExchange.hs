@@ -4,6 +4,7 @@ module Data.Actor.CoinExExchange (CoinExExchange(..), ping, prepare, signRequest
 
 import Domain.Actor.Exchange
 import Domain.Entity.Amount
+import Domain.Entity.Currency
 import Data.Network
 import Data.Utils (UnimplementedException(..), lazyByteString, fromByteString)
 
@@ -25,10 +26,21 @@ instance Exchange CoinExExchange where
             headers = [],
             body = Nothing
         }
-        response <- makeRequest request :: m (StatusResponse [Balance])
+        response <- makeRequest request :: m (StatusResponse [AmountDto])
         return $ map amountToDomain (payload response)
 
-    getRate exchange fromCurrency toCurrency = throw UnimplementedException
+    getRate :: forall m. (MonadIO m) => CoinExExchange -> Currency -> Currency -> m Amount
+    getRate exchange baseCurrency quoteCurrency = do
+        request <- signRequest exchange RequestParams {
+            method = "GET",
+            url = "https://api.coinex.com/v2/spot/ticker",
+            query = [("market", baseCurrency ++ quoteCurrency)],
+            headers = [],
+            body = Nothing
+        }
+        response <- makeRequest request :: m (StatusResponse [RateDto])
+        return Amount { currency = baseCurrency, value = getValue $ head $ payload response }
+
     getMarket exchange fromCurrency toCurrency = throw UnimplementedException
     placeSpotOrder exchange amount toCurrency = throw UnimplementedException
 
@@ -43,7 +55,7 @@ ping = do
         query = [],
         headers = [],
         body = Nothing
-    } :: m (StatusResponse Ping)
+    } :: m (StatusResponse PingDto)
     return $ result $ payload response
 
 {- @return exchange system time in unix ms -}
@@ -55,7 +67,7 @@ systemTime = do
         query = [],
         headers = [],
         body = Nothing
-    } :: m (StatusResponse SystemTime)
+    } :: m (StatusResponse SystemTimeDto)
     return $ timestamp $ payload response
 
 -- Auth --
@@ -112,30 +124,40 @@ path url
 
 -- DTO's --
 
-data Ping = Ping { result :: String } deriving (Show, Generic)
+data PingDto = PingDto { result :: String } deriving (Show, Generic)
 
-instance FromJSON Ping
+instance FromJSON PingDto
 
-data SystemTime = SystemTime {
+data SystemTimeDto = SystemTimeDto {
     timestamp :: Integer -- unix ms
 } deriving (Show, Generic)
 
-instance FromJSON SystemTime
+instance FromJSON SystemTimeDto
 
-data Balance = Balance {
+data AmountDto = AmountDto {
     available :: String,
     frozen :: String,
     ccy :: String
 } deriving (Show, Generic)
 
-instance FromJSON Balance
+instance FromJSON AmountDto
+
+data RateDto = RateDto {
+    last :: String
+} deriving (Show, Generic)
+
+instance FromJSON RateDto
+
+-- `last` field name interferes with a Prelude function name, so we need the getter
+getValue :: RateDto -> Float
+getValue (RateDto value) = read value
 
 -- Mappers --
 
-amountToDomain :: Balance -> Amount
-amountToDomain balance =
-    let currency = ccy balance
-        value = read $ available balance :: Float
+amountToDomain :: AmountDto -> Amount
+amountToDomain dto =
+    let currency = ccy dto
+        value = read $ available dto :: Float
     in Amount currency value
 
 -- Constants --

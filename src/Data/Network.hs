@@ -19,15 +19,16 @@ makeRequest params = do
 createRequest :: RequestParams -> Request
 createRequest params =
     setRequestMethod (method params) $
+    setRequestQueryString [(byteString key, Just (byteString value)) | (key, value) <- query params] $
     setRequestHeaders [(mk $ byteString key, byteString value) | (key, value) <- headers params] $
     parseRequest_ $ url params
 
 data RequestParams = RequestParams {
     method :: ByteString,
     url :: String,
-    query :: [(String, String)], -- TODO use query, headers, body
+    query :: [(String, String)],
     headers :: [(String, String)],
-    body :: Maybe String
+    body :: Maybe String -- TODO use body
 }
 
 -- DTO's --

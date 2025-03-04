@@ -11,11 +11,18 @@ main = do
         fail "Exchange isn't available"
     else do
         putStrLn "Exchange responded successfully"
-        balance <- getBalance CoinExExchange {
-            accessId = "your-value",
-            secretKey = "your-value"
-        }
-        putStrLn $ showBalance balance
+
+        balance <- getBalance exchange
+        putStrLn $ "\n[Balance]\n" ++ (showBalance balance)
+
+        rate <- getRate exchange "DNX" "USDT"
+        putStrLn $ "\n[Rate]\n" ++ (showBalance [rate])
+
+exchange :: CoinExExchange
+exchange = CoinExExchange {
+   accessId = "your-value",
+   secretKey = "your-value"
+}
 
 showBalance :: [Amount] -> String
 showBalance [] = ""
