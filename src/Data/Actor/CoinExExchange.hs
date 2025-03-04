@@ -19,18 +19,16 @@ instance Exchange CoinExExchange where
     getMarket exchange fromCurrency toCurrency = throw UnimplementedException
     placeSpotOrder exchange amount toCurrency = throw UnimplementedException
 
-ping :: forall m. (MonadIO m) => CoinExExchange -> m String
-ping _ = do
+ping :: forall m. (MonadIO m) => m String
+ping = do
     response <- makeRequest RequestParams {
         method = "GET",
         url = "https://api.coinex.com/v2/ping",
         query = [],
         headers = [],
         body = Nothing
-    } :: m PingResponse
+    } :: m (StatusResponse Ping)
     return $ result $ payload response
-
-type PingResponse = StatusResponse Ping
 
 data Ping = Ping { result :: String } deriving (Show, Generic)
 

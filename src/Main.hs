@@ -2,9 +2,9 @@ module Main (main) where
 
 import Domain.Entity.Amount
 import Domain.Actor.Exchange
-import Data.Actor.CoinExExchange
+import Data.Actor.CoinExExchange as CoinExExchange
 
 main :: IO ()
 main = do
-    result <- ping CoinExExchange { apiKey = "some-api-key" }
+    result <- CoinExExchange.ping
     print result
