@@ -43,7 +43,8 @@ executable trading-bot-exe
       src
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      aeson >=2.2.3.0
+      SHA >=1.6.4.4
+    , aeson >=2.2.3.0
     , base >=4.7 && <5
     , bytestring >=0.12.1.0
     , http-conduit >=2.3.9
