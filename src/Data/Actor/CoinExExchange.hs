@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, DeriveGeneric, ScopedTypeVariables, InstanceSigs #-}
+{-# LANGUAGE OverloadedStrings, DeriveGeneric, ScopedTypeVariables, InstanceSigs, DuplicateRecordFields #-}
 
 module Data.Actor.CoinExExchange (CoinExExchange(..), ping, prepare, signRequest) where
 
@@ -6,10 +6,11 @@ import Domain.Actor.Exchange
 import Domain.Entity.Amount
 import Domain.Entity.Currency
 import Data.Network
-import Data.Utils (UnimplementedException(..), lazyByteString, fromByteString)
+import Data.Utils (UnimplementedException(..), lazyByteString, fromLazyByteString, fromByteString)
 
 import Control.Exception
 import GHC.Generics
+import Data.Aeson
 import Data.Aeson.Types
 import Control.Monad.IO.Class
 import Data.Digest.Pure.SHA
@@ -24,7 +25,7 @@ instance Exchange CoinExExchange where
             url = "https://api.coinex.com/v2/assets/spot/balance",
             query = [],
             headers = [],
-            body = Nothing
+            body = Nothing :: Maybe Value
         }
         response <- makeRequest request :: m (StatusResponse [AmountDto])
         return $ map amountToDomain (payload response)
@@ -36,13 +37,33 @@ instance Exchange CoinExExchange where
             url = "https://api.coinex.com/v2/spot/ticker",
             query = [("market", baseCurrency ++ quoteCurrency)],
             headers = [],
-            body = Nothing
+            body = Nothing :: Maybe Value
         }
         response <- makeRequest request :: m (StatusResponse [RateDto])
         return Amount { currency = baseCurrency, value = getValue $ head $ payload response }
 
-    getMarket exchange fromCurrency toCurrency = throw UnimplementedException
-    placeSpotOrder exchange amount toCurrency = throw UnimplementedException
+    placeFokOrder :: forall m. (MonadIO m) => CoinExExchange -> Currency -> Currency -> OrderSide -> Float -> Float -> m Bool
+    placeFokOrder exchange baseCurrency quoteCurrency side baseCurrencyAmount price = do
+        request <- signRequest exchange RequestParams {
+            method = "POST",
+            url = "https://api.coinex.com/v2/spot/order",
+            query = [],
+            headers = [],
+            body = Just PlaceOrderDto {
+               marketType = "SPOT",
+               orderType = "fok",
+               market = baseCurrency ++ quoteCurrency,
+               ccy = Nothing,
+               amount = show $ baseCurrencyAmount,
+               price = Just (show price),
+               side = show side
+            }
+        }
+        response <- makeRequest request :: m (StatusResponse Value)
+        liftIO $ putStrLn ("\nFOK: (" ++ (show $ code response) ++ ") " ++ (message response)) -- TODO logger
+        return (code response == 0)
+
+    getMarket exchange baseCurrency quoteCurrency = throw UnimplementedException
 
 -- Service requests --
 
@@ -54,7 +75,7 @@ ping = do
         url = "https://api.coinex.com/v2/ping",
         query = [],
         headers = [],
-        body = Nothing
+        body = Nothing :: Maybe Value
     } :: m (StatusResponse PingDto)
     return $ result $ payload response
 
@@ -66,14 +87,14 @@ systemTime = do
         url = "https://api.coinex.com/v2/time",
         query = [],
         headers = [],
-        body = Nothing
+        body = Nothing :: Maybe Value
     } :: m (StatusResponse SystemTimeDto)
     return $ timestamp $ payload response
 
 -- Auth --
 
 {- Replaces [headers] completely. -}
-signRequest :: forall m. (MonadIO m) => CoinExExchange -> RequestParams -> m RequestParams
+signRequest :: (MonadIO m, ToJSON b) => CoinExExchange -> RequestParams b -> m (RequestParams b)
 signRequest exchange params = do
     timestamp <- systemTime
     return RequestParams {
@@ -92,16 +113,16 @@ signRequest exchange params = do
 digestHmac256 :: String -> String -> String
 digestHmac256 secret message = showDigest $ hmacSha256 (lazyByteString secret) (lazyByteString message)
 
-prepare :: Integer -> RequestParams -> String
+prepare :: (ToJSON b) => Integer -> RequestParams b -> String
 prepare timestamp params =
-    (fromByteString $ method params) ++
+    (method params) ++
     (path $ url $ params) ++
     (prepareQuery $ query params) ++
     (prepareBody $ body params) ++
     (show timestamp)
 
-prepareBody :: Maybe String -> String
-prepareBody (Just body) = body
+prepareBody :: (ToJSON b) => Maybe b -> String
+prepareBody (Just body) = fromLazyByteString $ encode body
 prepareBody Nothing = ""
 
 {- @return query starting with `?` if entries are present -}
@@ -152,12 +173,30 @@ instance FromJSON RateDto
 getValue :: RateDto -> Float
 getValue (RateDto value) = read value
 
+data PlaceOrderDto = PlaceOrderDto {
+    marketType :: String,
+    orderType :: String,
+    market :: String,
+    ccy :: Maybe String, -- related to amount; optional and can be used only with market order type
+    amount :: String, -- volume of order
+    price :: Maybe String, -- base currency to quote one; required for some order types
+    side :: String -- "sell" or "buy"
+} deriving (Show, Generic)
+
+instance ToJSON PlaceOrderDto where
+    toJSON = genericToJSON defaultOptions {
+        fieldLabelModifier = \field ->
+            case field of
+                "marketType" -> "market_type"
+                "orderType" -> "type"
+                _ -> field
+    }
+
 -- Mappers --
 
 amountToDomain :: AmountDto -> Amount
-amountToDomain dto =
-    let currency = ccy dto
-        value = read $ available dto :: Float
+amountToDomain (AmountDto available _ currency) =
+    let value = read $ available :: Float
     in Amount currency value
 
 -- Constants --

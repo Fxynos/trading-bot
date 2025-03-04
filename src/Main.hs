@@ -18,6 +18,9 @@ main = do
         rate <- getRate exchange "DNX" "USDT"
         putStrLn $ "\n[Rate]\n" ++ (showBalance [rate])
 
+        success <- placeFokOrder exchange "DNX" "USDT" Buy 87.6 0.08
+        putStrLn $ "\nPlace FOK order succeded: " ++ (show success)
+
 exchange :: CoinExExchange
 exchange = CoinExExchange {
    accessId = "your-value",

@@ -1,4 +1,4 @@
-module Domain.Actor.Exchange (Exchange(..)) where
+module Domain.Actor.Exchange (Exchange(..), OrderSide(..)) where
 
 import Domain.Entity.Currency
 import Domain.Entity.Amount
@@ -9,5 +9,11 @@ import Control.Monad.IO.Class
 class Exchange e where
     getBalance :: (MonadIO m) => e -> m [Amount]
     getRate :: (MonadIO m) => e -> Currency -> Currency -> m Amount
-    getMarket :: e -> Currency -> Currency -> Market
-    placeSpotOrder :: e -> Amount -> Currency -> Amount
+    getMarket :: (MonadIO m) => e -> Currency -> Currency -> m Market
+    placeFokOrder :: (MonadIO m) => e -> Currency -> Currency -> OrderSide -> Float -> Float -> m Bool
+
+data OrderSide = Buy | Sell
+
+instance Show OrderSide where
+    show Buy = "buy"
+    show Sell = "sell"

@@ -11,25 +11,30 @@ import GHC.Generics
 import Data.Aeson.Types
 import Network.HTTP.Simple
 
-makeRequest :: forall r m. (MonadIO m, FromJSON r) => RequestParams -> m r
+makeRequest :: forall req res m. (MonadIO m, ToJSON req, FromJSON res) => RequestParams req -> m res
 makeRequest params = do
-    response <- liftIO $ httpJSON $ createRequest params :: m (Response r)
+    response <- liftIO $ httpJSON $ createRequest params :: m (Response res)
     return $ getResponseBody response
 
-createRequest :: RequestParams -> Request
+createRequest :: (ToJSON req) => RequestParams req -> Request
 createRequest params =
-    setRequestMethod (method params) $
+    setRequestMethod (byteString $ method params) $
     setRequestQueryString [(byteString key, Just (byteString value)) | (key, value) <- query params] $
     setRequestHeaders [(mk $ byteString key, byteString value) | (key, value) <- headers params] $
+    setOptionalRequestBody (body params) $
     parseRequest_ $ url params
 
-data RequestParams = RequestParams {
-    method :: ByteString,
+setOptionalRequestBody :: (ToJSON req) => Maybe req -> Request -> Request
+setOptionalRequestBody Nothing request = request
+setOptionalRequestBody (Just body) request = setRequestBodyJSON body request
+
+data RequestParams b = RequestParams {
+    method :: String,
     url :: String,
     query :: [(String, String)],
     headers :: [(String, String)],
-    body :: Maybe String -- TODO use body
-}
+    body :: Maybe b
+} deriving Show
 
 -- DTO's --
 
