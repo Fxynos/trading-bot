@@ -27,11 +27,14 @@ executable trading-bot-exe
       Data.Actor.CoinExExchange
       Data.Actor.FileStateDataSource
       Data.Actor.GridBot
+      Data.Actor.Logger
       Data.Network
       Data.Utils
       Domain.Actor.Bot
       Domain.Actor.Exchange
+      Domain.Actor.Logger
       Domain.Actor.StateDataSource
+      Domain.DI
       Domain.Entity.Amount
       Domain.Entity.Currency
       Domain.Entity.Market

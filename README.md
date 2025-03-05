@@ -8,10 +8,12 @@
 ## Language extensions
 
 ```haskell
-{-# LANGUAGE OverloadedStrings, DeriveGeneric, ScopedTypeVariables, InstanceSigs #-}
+{-# LANGUAGE OverloadedStrings, DeriveGeneric, ScopedTypeVariables, InstanceSigs, DuplicateRecordFields, ExistentialQuantification #-}
 ```
 
 - `OverloadedStrings` allows implicit cast for String literals to ByteString.
 - `DeriveGeneric` allows automatic parsing for Generic derives with FromJSON.
 - `ScopedTypeVariables` allows to use type variables in scope of a function.
 - `InstanceSigs` allows to explicitly specify signatures of methods inside instance declarations.
+- `DuplicateRecordFields` allows to use the same field name in different data records.
+- `ExistentialQuantification` allows to add constraints in `data` declaration in order to hide type param, but still enforce the constraint.
