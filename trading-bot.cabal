@@ -52,6 +52,7 @@ executable trading-bot-exe
     , bytestring >=0.12.1.0
     , case-insensitive >=1.2.1.0
     , http-conduit >=2.3.9
+    , mtl >=2.3.1
   default-language: Haskell2010
 
 test-suite trading-bot-test
