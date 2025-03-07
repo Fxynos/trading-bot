@@ -46,6 +46,8 @@ executables:
     - bytestring >= 0.12.1.0
     - aeson >= 2.2.3.0
     - SHA >= 1.6.4.4
+    - mtl >= 2.3.1
+    - time >= 1.12.2
 
 tests:
   trading-bot-test:
