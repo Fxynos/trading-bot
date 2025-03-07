@@ -5,6 +5,7 @@
 - `aeson` provides such things like `FromJSON` and `ToJSON` useful for serializing DTO's.
 - `SHA` helps with authorized requests to CoinEx, that must be signed with secret key using HMAC.
 - `mtl` provides `Reader` to implement dependency injection.
+- `time` is used by logger for timestamps.
 
 ## Language extensions
 
