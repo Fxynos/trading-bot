@@ -17,7 +17,7 @@ data DependencyHolder where
 data PolymorphicLogger = forall l. Logger l => PolymorphicLogger l
 
 instance Logger PolymorphicLogger where
-    trace (PolymorphicLogger logger) tag level message = trace logger tag level message
+    trace (PolymorphicLogger unwrappedLogger) tag level message = trace unwrappedLogger tag level message
 
 logger :: DependencyHolder -> PolymorphicLogger
 logger (DependencyHolder l) = PolymorphicLogger l

@@ -5,10 +5,11 @@ class Logger this where
     trace :: this -> String -> Level -> String -> IO ()
 
     -- default impl --
-    info, warn, err :: this -> String -> String -> IO ()
+    debug, info, warn, err :: this -> String -> String -> IO ()
 
+    debug this tag message = trace this tag DEBUG message
     info this tag message = trace this tag INFO message
     warn this tag message = trace this tag WARNING message
     err this tag message = trace this tag ERROR message
 
-data Level = INFO | WARNING | ERROR deriving Show
+data Level = DEBUG | INFO | WARNING | ERROR deriving Show

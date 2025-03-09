@@ -39,6 +39,9 @@ executable trading-bot-exe
       Domain.Entity.Currency
       Domain.Entity.Market
       Domain.Entity.State
+      Presentation.Config
+      Presentation.DI
+      Presentation.UI
       Paths_trading_bot
   autogen-modules:
       Paths_trading_bot

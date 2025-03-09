@@ -68,7 +68,7 @@ instance Exchange CoinExExchange where
 -- Service requests --
 
 {- @return "pong" as well -}
-ping :: forall m. (MonadIO m) => m String
+ping :: IO String
 ping = do
     response <- makeRequest RequestParams {
         method = "GET",
@@ -76,7 +76,7 @@ ping = do
         query = [],
         headers = [],
         body = Nothing :: Maybe Value
-    } :: m (StatusResponse PingDto)
+    } :: IO (StatusResponse PingDto)
     return $ result $ payload response
 
 {- @return exchange system time in unix ms -}
