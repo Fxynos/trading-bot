@@ -15,7 +15,7 @@ stack run
 
 To launch trading bot:
 ```bash
-stack run -- --tick 15000 --gap 0.1 --amount 5
+stack run -- --tick 15000 --gap 1.5 --amount 4.5 --currency DNX --id 0123456789ABCDEF --key 0123456789ABCDEF 
 ```
 
 ## Dependencies

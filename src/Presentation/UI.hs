@@ -25,7 +25,7 @@ printHelp = putStrLn "\n[Help]\
     \\n--id - CoinEx access id\
     \\n--key - CoinEx secret key\
     \\n\
-    \\nUsage: --tick 15000 --gap 2.5 --order 7.5 --currency DNX --id 0123456789ABCDEF --key 0123456789ABCDEF"
+    \\nUsage: --tick 15000 --gap 2.5 --amount 7.5 --currency DNX --id 0123456789ABCDEF --key 0123456789ABCDEF"
 
 printConfig :: Config -> IO ()
 printConfig config = putStrLn (
@@ -88,8 +88,3 @@ asMap list =
 
 mask :: String -> String
 mask s = Prelude.take (Prelude.length s) (repeat '*')
-
--- Constants --
-
-tag :: String
-tag = "UI"
