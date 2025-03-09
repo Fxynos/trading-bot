@@ -51,6 +51,7 @@ executable trading-bot-exe
     , base >=4.7 && <5
     , bytestring >=0.12.1.0
     , case-insensitive >=1.2.1.0
+    , containers >=0.6.8
     , http-conduit >=2.3.9
     , mtl >=2.3.1
     , time >=1.12.2

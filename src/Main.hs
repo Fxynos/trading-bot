@@ -10,12 +10,37 @@ import Data.Actor.Logger
 import Domain.DI
 
 import Control.Monad.Reader
+import System.Environment
+import Data.Map as Map
 
 main :: IO ()
 main = do
-    let logger = CompositeLogger [(CompositeLoggerItem TerminalLogger), (CompositeLoggerItem (FileLogger "log.txt"))]
-    runReaderT checkLogger $ DependencyHolder logger
+    -- retrieve args --
 
+    rawArgs <- getArgs :: IO [String]
+    let args = asMap rawArgs :: Map String String
+
+    let resolvedArgs = combine [
+            (Map.lookup "--tick" args),
+            (Map.lookup "--gap" args),
+            (Map.lookup "--amount" args)
+            ] :: Maybe [String]
+
+    case resolvedArgs of
+        Nothing -> showHelp
+        Just [tickStr, gapStr, amountStr] -> do
+            let tick = read tickStr :: Int
+            let gap = read gapStr :: Float
+            let amount = read amountStr :: Float
+
+            putStrLn (
+                "[Configuration]" ++
+                "\nTick (ms): " ++ (show tick) ++
+                "\nGap (USDT): " ++ (show gap) ++
+                "\nAmount (USDT): " ++ (show amount)
+                )
+
+{- Usage: `runReaderT checkLogger $ DependencyHolder logger` -}
 checkLogger :: AppMonad m => m () -- TODO remove after debug
 checkLogger = do
     logger <- asks logger
@@ -30,11 +55,33 @@ exchange = CoinExExchange {
    secretKey = "your-value"
 }
 
+-- Utils --
+
+{- Asserts that all the items are present, otherwise returns `Nothing` -}
+combine :: [Maybe a] -> Maybe [a]
+combine (Nothing : _) = Nothing
+combine [] = Just []
+combine (Just current : next) = do
+    nextCombined <- combine next
+    return (current : nextCombined)
+
+{- Parses args list as key-value pairs -}
+asMap :: [String] -> Map String String
+asMap list =
+    let indexed = zip [0 ..] list :: [(Int, String)]
+        keys = [key | (index, key) <- indexed, mod index 2 == 0] :: [String]
+        values = [value | (index, value) <- indexed, mod index 2 /= 0] :: [String]
+        entries = zip keys values :: [(String, String)]
+    in fromList entries
+
 showBalance :: [Amount] -> String
 showBalance [] = ""
 showBalance balance =
     let lines = [(currency amount) ++ ": " ++ (show $ value amount) | amount <- balance]
-    in foldl (\line1 line2 -> line1 ++ "\n" ++ line2) (head lines) (tail lines)
+    in Prelude.foldl (\line1 line2 -> line1 ++ "\n" ++ line2) (head lines) (tail lines)
+
+showHelp :: IO ()
+showHelp = putStrLn "Expected arguments:\n--tick - invalidation period in ms, e.g. 15000\n--gap - cell gap in USDT, e.g. 0.5\n--amount - order amount in USDT, e.g. 5.0"
 
 -- Constants --
 

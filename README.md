@@ -1,3 +1,23 @@
+## Requirements
+
+[The Haskell Tool Stack](https://docs.haskellstack.org/en/stable/) is required to run the project.
+
+## Run
+
+### Help
+
+To see help message:
+```bash
+stack run
+```
+
+### Launch bot
+
+To launch trading bot:
+```bash
+stack run -- --tick 15000 --gap 0.1 --amount 5
+```
+
 ## Dependencies
 
 - `http-conduit` as HTTP client.
@@ -6,6 +26,7 @@
 - `SHA` helps with authorized requests to CoinEx, that must be signed with secret key using HMAC.
 - `mtl` provides `Reader` to implement dependency injection.
 - `time` is used by logger for timestamps.
+- `containers` provides `Map`.
 
 ## Language extensions
 
