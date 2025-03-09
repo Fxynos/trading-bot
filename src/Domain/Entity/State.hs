@@ -1,8 +1,10 @@
 module Domain.Entity.State (State(..)) where
 
+import Domain.Entity.Currency
 import Domain.Entity.Amount
 
 data State = State {
-    rate :: Amount,
+    baseCurrency :: Currency,
+    rate :: Float, -- base currency to quote one
     balance :: [Amount]
 }

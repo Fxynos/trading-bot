@@ -2,12 +2,15 @@
 
 module Main (main) where
 
+import Domain.Entity.State
 import Domain.Entity.Amount
 import Domain.Actor.Exchange
 import Data.Actor.CoinExExchange as CoinExExchange
 import Domain.Actor.Logger
 import Data.Actor.Logger
 import Domain.DI
+import Domain.Actor.StateDataSource
+import Data.Actor.FileStateDataSource
 
 import Control.Monad.Reader
 import System.Environment
@@ -23,12 +26,13 @@ main = do
     let resolvedArgs = combine [
             (Map.lookup "--tick" args),
             (Map.lookup "--gap" args),
-            (Map.lookup "--amount" args)
+            (Map.lookup "--amount" args),
+            (Map.lookup "--currency" args)
             ] :: Maybe [String]
 
     case resolvedArgs of
         Nothing -> showHelp
-        Just [tickStr, gapStr, amountStr] -> do
+        Just [tickStr, gapStr, amountStr, currency] -> do
             let tick = read tickStr :: Int
             let gap = read gapStr :: Float
             let amount = read amountStr :: Float
@@ -37,8 +41,27 @@ main = do
                 "[Configuration]" ++
                 "\nTick (ms): " ++ (show tick) ++
                 "\nGap (USDT): " ++ (show gap) ++
-                "\nAmount (USDT): " ++ (show amount)
+                "\nAmount (USDT): " ++ (show amount) ++
+                "\nBase currency: " ++ currency ++
+                "\nQuote currency: USDT"
                 )
+
+            -- restore state --
+
+            let stateSource = FileStateDataSource { filePath = "temp/state.json" }
+            hasState <- has stateSource
+            state <- case hasState of
+                True -> get stateSource
+                False -> do
+                    return State {
+                        baseCurrency = currency,
+                        rate = 0.05,
+                        balance = []
+                    } -- TODO fetch current rate and balance
+
+            putStrLn ((++) "Restored rate: " $ show $ rate state)
+
+            set stateSource state
 
 {- Usage: `runReaderT checkLogger $ DependencyHolder logger` -}
 checkLogger :: AppMonad m => m () -- TODO remove after debug
@@ -81,7 +104,11 @@ showBalance balance =
     in Prelude.foldl (\line1 line2 -> line1 ++ "\n" ++ line2) (head lines) (tail lines)
 
 showHelp :: IO ()
-showHelp = putStrLn "Expected arguments:\n--tick - invalidation period in ms, e.g. 15000\n--gap - cell gap in USDT, e.g. 0.5\n--amount - order amount in USDT, e.g. 5.0"
+showHelp = putStrLn "Expected arguments:\
+\n--tick - invalidation period in ms, e.g. 15000\
+\n--gap - cell gap in USDT, e.g. 0.5\
+\n--amount - order amount in USDT, e.g. 5.0\
+\n--currency - base currency (and quote currency is fixed to USDT)"
 
 -- Constants --
 
