@@ -1,3 +1,23 @@
+## Requirements
+
+[The Haskell Tool Stack](https://docs.haskellstack.org/en/stable/) is required to run the project.
+
+## Run
+
+### Help
+
+To see help message:
+```bash
+stack run
+```
+
+### Launch bot
+
+To launch trading bot:
+```bash
+stack run -- --tick 15000 --gap 0.1 --amount 5
+```
+
 ## Dependencies
 
 - `http-conduit` as HTTP client.
@@ -6,11 +26,13 @@
 - `SHA` helps with authorized requests to CoinEx, that must be signed with secret key using HMAC.
 - `mtl` provides `Reader` to implement dependency injection.
 - `time` is used by logger for timestamps.
+- `containers` provides `Map`.
+- `directory` provides `doesFileExist` function.
 
 ## Language extensions
 
 ```haskell
-{-# LANGUAGE OverloadedStrings, DeriveGeneric, ScopedTypeVariables, InstanceSigs, DuplicateRecordFields, ExistentialQuantification, GADTs, ConstraintKinds, FlexibleContexts #-}
+{-# LANGUAGE OverloadedStrings, DeriveGeneric, ScopedTypeVariables, InstanceSigs, DuplicateRecordFields, ExistentialQuantification, GADTs, ConstraintKinds, FlexibleContexts, NumericUnderscores #-}
 ```
 
 - `OverloadedStrings` allows implicit cast for String literals to ByteString.
@@ -21,3 +43,4 @@
 - `ExistentialQuantification` allows to add constraints in `data` declaration in order to hide type param, but still enforce the constraint.
 - `GADTs` enables support for polymorphism in `data` fields.
 - `ConstraintKinds, FlexibleContexts` enable support for **constraint tuples** (used with `type`).
+- `NumericUnderscores` allows underscore syntax for number literals (`100_000`). 
