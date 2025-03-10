@@ -5,6 +5,6 @@ import Domain.Entity.Amount
 
 data State = State {
     baseCurrency :: Currency,
-    rate :: Float, -- base currency to quote one
+    cell :: Float, -- rate of base currency to quote one
     balance :: [Amount]
 }
