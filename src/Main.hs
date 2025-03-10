@@ -3,6 +3,7 @@ module Main (main) where
 import Presentation.Config
 import Presentation.UI
 import Presentation.DI
+import Presentation.EventLoop
 
 import Domain.Entity.State
 import Domain.Entity.Amount
@@ -42,7 +43,10 @@ main = do
             if pong /= "pong" then
                 err logger tag "Exchange unavailable. Stop."
             else do
-                debug logger tag "Exchange responded."
+                debug logger tag "Exchange responded. Passing control to the looper..."
+                let handler = \event -> debug logger tag ("Handling looper event: " ++ (show event))
+                joinIntervalLoop (tick config) handler
+                info logger tag "Finished."
 
 -- Constants --
 

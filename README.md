@@ -28,6 +28,7 @@ stack run -- --tick 15000 --gap 1.5 --amount 4.5 --currency DNX --id 0123456789A
 - `time` is used by logger for timestamps.
 - `containers` provides `Map`.
 - `directory` provides `doesFileExist` function.
+- `timers`, `suspend` provide `Timer` and `Delay` for [EventLoop](src/Presentation/EventLoop.hs).
 
 ## Language extensions
 
@@ -42,5 +43,5 @@ stack run -- --tick 15000 --gap 1.5 --amount 4.5 --currency DNX --id 0123456789A
 - `DuplicateRecordFields` allows to use the same field name in different data records.
 - `ExistentialQuantification` allows to add constraints in `data` declaration in order to hide type param, but still enforce the constraint.
 - `GADTs` enables support for polymorphism in `data` fields.
-- `ConstraintKinds, FlexibleContexts` enable support for **constraint tuples** (used with `type`).
+- `ConstraintKinds`, `FlexibleContexts` enable support for **constraint tuples** (used with `type`).
 - `NumericUnderscores` allows underscore syntax for number literals (`100_000`). 
