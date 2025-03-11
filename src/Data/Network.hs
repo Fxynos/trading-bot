@@ -1,9 +1,12 @@
-{-# LANGUAGE OverloadedStrings, DeriveGeneric, ScopedTypeVariables #-}
+{-# LANGUAGE OverloadedStrings, DeriveGeneric, ScopedTypeVariables, FlexibleContexts #-}
 
 module Data.Network (makeRequest, RequestParams(..), StatusResponse(..)) where
 
+import Domain.DI
+import Domain.Actor.Logger
 import Data.Utils (byteString)
 
+import Control.Monad.Reader
 import Data.ByteString
 import Data.CaseInsensitive
 import Control.Monad.IO.Class
@@ -11,10 +14,16 @@ import GHC.Generics
 import Data.Aeson.Types
 import Network.HTTP.Simple
 
-makeRequest :: forall req res m. (MonadIO m, ToJSON req, FromJSON res) => RequestParams req -> m res
+makeRequest :: forall req res m. (MonadIO m, HasDI m, ToJSON req, Show req, FromJSON res, Show res) =>
+    RequestParams req -> m res
 makeRequest params = do
-    response <- liftIO $ httpJSON $ createRequest params :: m (Response res)
-    return $ getResponseBody response
+    logger <- asks logger
+    liftIO $ do
+        debug logger tag ((++) "Request: " $ show params)
+        response <- httpJSON $ createRequest params :: IO (Response res)
+        let responseBody = getResponseBody response
+        debug logger tag ((++) "Response: " $ show responseBody)
+        return responseBody
 
 createRequest :: (ToJSON req) => RequestParams req -> Request
 createRequest params =
@@ -54,3 +63,8 @@ instance (FromJSON payload) => FromJSON (StatusResponse payload) where
             message = message,
             payload = payload
         }
+
+-- Constants --
+
+tag :: String
+tag = "Network"

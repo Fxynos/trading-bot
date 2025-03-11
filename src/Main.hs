@@ -34,13 +34,14 @@ main = do
             let exchange = injectExchange config
             let stateSource = injectStateSource
             let bot = injectBot config
+            let withDI = \f -> runReaderT f $ DependencyHolder logger
 
             info logger tag "Starting..."
             debug logger tag $ show (config :: Config)
 
             -- check exchange
             debug logger tag "Checking if exchange is reachable..."
-            pong <- CoinExExchange.ping
+            pong <- withDI CoinExExchange.ping
             if pong /= "pong" then
                 err logger tag "Exchange unavailable. Stop."
             else do
@@ -55,8 +56,6 @@ main = do
                                     INVALIDATE -> invalidate bot
                                     STOP -> finish bot
 
-                        let readerWrapper = runReaderT callback $ DependencyHolder logger
-
                         hasState <- liftIO $ has stateSource
                         suppliedState <-
                             if hasState then liftIO $ do
@@ -65,12 +64,12 @@ main = do
                                 return state
                             else do
                                 debug logger tag "No saved state. Fetching data from exchange..."
-                                rate <- getRate exchange (currency config) quoteCurrency
-                                balance <- getBalance exchange
+                                rate <- withDI $ getRate exchange (currency config) quoteCurrency
+                                balance <- withDI $ getBalance exchange
                                 return State { baseCurrency = currency config, cell = rate, balance = balance }
 
                         debug logger tag "State supplied."
-                        producedState <- execStateT readerWrapper suppliedState
+                        producedState <- execStateT (withDI callback) suppliedState
                         debug logger tag "Saving state..."
                         liftIO $ set stateSource producedState
                         debug logger tag "Saved."
