@@ -5,7 +5,6 @@ module Data.Actor.CoinExExchange (CoinExExchange(..), ping, prepare, signRequest
 import Domain.DI
 import Domain.Actor.Exchange
 import Domain.Entity.Amount
-import Domain.Entity.Currency
 import Data.Network
 import Data.Utils (UnimplementedException(..), lazyByteString, fromLazyByteString, fromByteString)
 

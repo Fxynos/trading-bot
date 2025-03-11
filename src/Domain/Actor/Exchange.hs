@@ -2,7 +2,6 @@
 
 module Domain.Actor.Exchange (Exchange(..), OrderSide(..)) where
 
-import Domain.Entity.Currency
 import Domain.Entity.Amount
 import Domain.Entity.Market
 import Domain.DI

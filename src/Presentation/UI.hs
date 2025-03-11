@@ -21,7 +21,8 @@ printHelp = putStrLn "\n[Help]\
     \\n--tick - invalidation period in ms, e.g. 15000\
     \\n--gap - cell gap in USDT, e.g. 0.5\
     \\n--amount - order amount in USDT, e.g. 5.0\
-    \\n--currency - base currency (quote currency is fixed to USDT)\
+    \\n--base - base currency, e.g. DNX\
+    \\n--quote - quote currency, e.g. USDT\
     \\n--id - CoinEx access id\
     \\n--key - CoinEx secret key\
     \\n\
@@ -33,8 +34,8 @@ printConfig config = putStrLn (
     "\nTick (ms): " ++ (show $ tick config) ++
     "\nGap (USDT): " ++ (show $ gap config) ++
     "\nAmount (USDT): " ++ (show $ amount config) ++
-    "\nBase currency: " ++ (Config.currency config) ++
-    "\nQuote currency: USDT" ++
+    "\nBase currency: " ++ (baseCurrency config) ++
+    "\nQuote currency: " ++ (quoteCurrency config) ++
     "\nCoinEx access id: " ++ (mask $ accessId config) ++
     "\nCoinEx secret key: " ++ (mask $ secretKey config) ++ "\n"
     )
@@ -49,7 +50,8 @@ args = do
             (Map.lookup "--tick" args),
             (Map.lookup "--gap" args),
             (Map.lookup "--amount" args),
-            (Map.lookup "--currency" args),
+            (Map.lookup "--base" args),
+            (Map.lookup "--quote" args),
             (Map.lookup "--id" args),
             (Map.lookup "--key" args)
             ] :: Maybe [String]
@@ -57,12 +59,13 @@ args = do
     return $ case resolvedArgs of
         Nothing ->
             Nothing
-        Just [tickStr, gapStr, amountStr, currency, accessId, secretKey] ->
+        Just [tickStr, gapStr, amountStr, baseCurrency, quoteCurrency, accessId, secretKey] ->
             Just Config {
                 tick = read tickStr,
                 gap = read gapStr,
                 amount = read amountStr,
-                Config.currency = currency,
+                baseCurrency = baseCurrency,
+                quoteCurrency = quoteCurrency,
                 accessId = accessId,
                 secretKey = secretKey
             }

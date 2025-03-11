@@ -2,15 +2,10 @@ module Presentation.DI (injectLogger, injectExchange, injectStateSource, injectB
 
 import Presentation.Config as Config
 
-import Domain.Actor.Logger
-import Domain.Actor.Exchange
-import Domain.Actor.StateDataSource
-import Domain.Actor.Bot
-
 import Data.Actor.Logger
 import Data.Actor.CoinExExchange as CoinExExchange
 import Data.Actor.FileStateDataSource
-import Data.Actor.GridBot
+import Data.Actor.GridBot as GridBot
 
 -- Bindings --
 
@@ -30,7 +25,13 @@ injectStateSource :: FileStateDataSource
 injectStateSource = FileStateDataSource { filePath = stateFilePath }
 
 injectBot :: Config -> GridBot CoinExExchange
-injectBot config = GridBot { exchange = injectExchange config }
+injectBot config = GridBot {
+    exchange = injectExchange config,
+    GridBot.gap = Config.gap config,
+    orderAmount = amount config,
+    GridBot.baseCurrency = Config.baseCurrency config,
+    GridBot.quoteCurrency = Config.quoteCurrency config
+}
 
 -- Constants --
 

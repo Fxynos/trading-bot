@@ -36,7 +36,6 @@ executable trading-bot-exe
       Domain.Actor.StateDataSource
       Domain.DI
       Domain.Entity.Amount
-      Domain.Entity.Currency
       Domain.Entity.Market
       Domain.Entity.State
       Presentation.Config

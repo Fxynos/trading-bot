@@ -31,6 +31,7 @@ instance StateDataSource FileStateDataSource where
 
 data StateEntity = StateEntity {
     baseCurrency :: String, -- ticker
+    quoteCurrency :: String, -- ticker
     cell :: Float,
     balance :: [AmountEntity]
 } deriving (Show, Generic)
@@ -49,8 +50,9 @@ instance ToJSON AmountEntity
 -- Mappers --
 
 stateToDomain :: StateEntity -> State
-stateToDomain (StateEntity currency cell balance) = State {
-    baseCurrency = currency,
+stateToDomain (StateEntity baseCurrency quoteCurrency cell balance) = State {
+    baseCurrency = baseCurrency,
+    quoteCurrency = quoteCurrency,
     cell = cell,
     balance = map amountToDomain balance
 }
@@ -62,8 +64,9 @@ amountToDomain (AmountEntity currency value) = Amount {
 }
 
 stateFromDomain :: State -> StateEntity
-stateFromDomain (State currency cell balance) = StateEntity {
-    baseCurrency = currency,
+stateFromDomain (State baseCurrency quoteCurrency cell balance) = StateEntity {
+    baseCurrency = baseCurrency,
+    quoteCurrency = quoteCurrency,
     cell = cell,
     balance = map amountFromDomain balance
 }

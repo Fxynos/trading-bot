@@ -1,11 +1,11 @@
 module Main (main) where
 
-import Presentation.Config
+import Presentation.Config as Config
 import Presentation.UI
 import Presentation.DI
 import Presentation.EventLoop
 
-import Domain.Entity.State
+import Domain.Entity.State as State
 import Domain.Actor.Exchange
 import Domain.Actor.Bot
 import Data.Actor.CoinExExchange as CoinExExchange
@@ -64,24 +64,36 @@ main = do
                                 return state
                             else do
                                 debug logger tag "No saved state. Fetching data from exchange..."
-                                rate <- withDI $ getRate exchange (currency config) quoteCurrency
+                                rate <- withDI $ getRate exchange (Config.baseCurrency config) (Config.quoteCurrency config)
                                 balance <- withDI $ getBalance exchange
-                                return State { baseCurrency = currency config, cell = rate, balance = balance }
+                                return State {
+                                    State.baseCurrency = Config.baseCurrency config,
+                                    State.quoteCurrency = Config.quoteCurrency config,
+                                    cell = rate,balance = balance
+                                }
 
-                        debug logger tag "State supplied."
-                        producedState <- execStateT (withDI callback) suppliedState
-                        debug logger tag "Saving state..."
-                        liftIO $ set stateSource producedState
-                        debug logger tag "Saved."
-                        return ()
+                        if not (suppliedState `correspondsTo` config) then
+                            err logger tag
+                                "Saved state doesn't correspond to the current configuration. \
+                                \\nUse the same currencies or remove stale state."
+                        else do
+                            debug logger tag "State supplied."
+                            producedState <- execStateT (withDI callback) suppliedState
+                            debug logger tag "Saving state..."
+                            liftIO $ set stateSource producedState
+                            debug logger tag "Saved."
+                            return ()
 
                 joinIntervalLoop (tick config) handler
                 info logger tag "Finished."
+
+-- Utils --
+
+correspondsTo :: State.State -> Config -> Bool
+state `correspondsTo` config = -- backticks "`" mark function as infix
+    State.baseCurrency state == Config.baseCurrency config && State.quoteCurrency state == Config.quoteCurrency config
 
 -- Constants --
 
 tag :: String
 tag = "Main"
-
-quoteCurrency :: String
-quoteCurrency = "USDT"

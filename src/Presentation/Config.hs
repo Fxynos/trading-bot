@@ -4,14 +4,16 @@ data Config = Config {
     tick :: Int,
     gap :: Float,
     amount :: Float,
-    currency :: String,
+    baseCurrency :: String,
+    quoteCurrency :: String,
     accessId :: String,
     secretKey :: String
 }
 
 instance Show Config where
-    show (Config tick gap amount currency _ _) =
+    show (Config tick gap amount baseCurrency quoteCurrency _ _) =
         "Config: tick = " ++ (show tick) ++
         ", gap = " ++ (show gap) ++
         ", amount = " ++ (show amount) ++
-        ", currency = " ++ (show currency)
+        ", base currency = " ++ (show baseCurrency) ++
+        ", quote currency = " ++ (show quoteCurrency)
