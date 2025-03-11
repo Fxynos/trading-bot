@@ -24,7 +24,7 @@ stack run -- --tick 15000 --gap 1.5 --amount 4.5 --currency DNX --id 0123456789A
 - `bytestring` and `case-insensitive` as transitive dependencies of `http-conduit`
 - `aeson` provides such things like `FromJSON` and `ToJSON` useful for serializing DTO's.
 - `SHA` helps with authorized requests to CoinEx, that must be signed with secret key using HMAC.
-- `mtl` provides `Reader` to implement dependency injection.
+- `mtl` provides `Reader` to implement dependency injection and `State` for state management.
 - `time` is used by logger for timestamps.
 - `containers` provides `Map`.
 - `directory` provides `doesFileExist` function.

@@ -30,7 +30,7 @@ instance Exchange CoinExExchange where
         response <- makeRequest request :: m (StatusResponse [AmountDto])
         return $ map amountToDomain (payload response)
 
-    getRate :: forall m. (MonadIO m) => CoinExExchange -> Currency -> Currency -> m Amount
+    getRate :: forall m. (MonadIO m) => CoinExExchange -> Currency -> Currency -> m Float
     getRate exchange baseCurrency quoteCurrency = do
         request <- signRequest exchange RequestParams {
             method = "GET",
@@ -40,7 +40,7 @@ instance Exchange CoinExExchange where
             body = Nothing :: Maybe Value
         }
         response <- makeRequest request :: m (StatusResponse [RateDto])
-        return Amount { currency = baseCurrency, value = getValue $ head $ payload response }
+        return $ getValue $ head $ payload response
 
     placeFokOrder :: forall m. (MonadIO m) => CoinExExchange -> Currency -> Currency -> OrderSide -> Float -> Float -> m Bool
     placeFokOrder exchange baseCurrency quoteCurrency side baseCurrencyAmount price = do

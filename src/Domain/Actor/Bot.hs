@@ -1,8 +1,10 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module Domain.Actor.Bot (Bot(..)) where
 
-import Domain.Entity.State
+import Domain.DI
 
 class Bot b where
-    onCreate :: b -> State -> ()
-    invalidate :: b -> ()
-    finish :: b -> State
+    onCreate :: AppMonad m => b -> m ()
+    invalidate :: AppMonad m => b -> m ()
+    finish :: AppMonad m => b -> m ()

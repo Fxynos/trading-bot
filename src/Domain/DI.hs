@@ -3,11 +3,13 @@
 module Domain.DI (DependencyHolder(..), AppMonad, logger) where
 
 import Domain.Actor.Logger
+import Domain.Entity.State
 
 import Control.Monad.IO.Class
 import Control.Monad.Reader.Class
+import Control.Monad.State.Class
 
-type AppMonad m = (MonadIO m, MonadReader DependencyHolder m)
+type AppMonad m = (MonadIO m, MonadReader DependencyHolder m, MonadState State m)
 
 data DependencyHolder where
     -- constructor uses polymorhic `Logger` param thanks to `GADTs`

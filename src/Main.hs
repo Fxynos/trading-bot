@@ -6,17 +6,18 @@ import Presentation.DI
 import Presentation.EventLoop
 
 import Domain.Entity.State
-import Domain.Entity.Amount
 import Domain.Actor.Exchange
+import Domain.Actor.Bot
 import Data.Actor.CoinExExchange as CoinExExchange
 import Domain.Actor.Logger
 import Data.Actor.Logger
 import Domain.DI
-import Domain.Actor.StateDataSource
+import Domain.Actor.StateDataSource as StateDataSource
 import Data.Actor.FileStateDataSource
 import Data.Utils (getOrThrow, RuntimeException(..))
 
 import Control.Monad.Reader
+import Control.Monad.State
 
 main :: IO ()
 main = do
@@ -43,8 +44,38 @@ main = do
             if pong /= "pong" then
                 err logger tag "Exchange unavailable. Stop."
             else do
-                debug logger tag "Exchange responded. Passing control to the looper..."
-                let handler = \event -> debug logger tag ("Handling looper event: " ++ (show event))
+                -- join event loop
+                debug logger tag "Exchange responded. Join event loop. Press enter key to safely exit."
+                let handler = \event -> do
+                        debug logger tag ("Handle \"" ++ (show event) ++ "\" looper event.")
+
+                        let callback =
+                                case event of
+                                    START -> onCreate bot
+                                    INVALIDATE -> invalidate bot
+                                    STOP -> finish bot
+
+                        let readerWrapper = runReaderT callback $ DependencyHolder logger
+
+                        hasState <- liftIO $ has stateSource
+                        suppliedState <-
+                            if hasState then liftIO $ do
+                                debug logger tag "Restoring saved state..."
+                                state <- StateDataSource.get stateSource
+                                return state
+                            else do
+                                debug logger tag "No saved state. Fetching data from exchange..."
+                                rate <- getRate exchange (currency config) quoteCurrency
+                                balance <- getBalance exchange
+                                return State { baseCurrency = currency config, cell = rate, balance = balance }
+
+                        debug logger tag "State supplied."
+                        producedState <- execStateT readerWrapper suppliedState
+                        debug logger tag "Saving state..."
+                        liftIO $ set stateSource producedState
+                        debug logger tag "Saved."
+                        return ()
+
                 joinIntervalLoop (tick config) handler
                 info logger tag "Finished."
 
@@ -52,3 +83,6 @@ main = do
 
 tag :: String
 tag = "Main"
+
+quoteCurrency :: String
+quoteCurrency = "USDT"
