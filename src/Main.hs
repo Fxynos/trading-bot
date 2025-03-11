@@ -75,7 +75,7 @@ main = do
                         if not (suppliedState `correspondsTo` config) then
                             err logger tag
                                 "Saved state doesn't correspond to the current configuration. \
-                                \\nUse the same currencies or remove stale state."
+                                \Use the same currencies or remove stale state."
                         else do
                             debug logger tag "State supplied."
                             producedState <- execStateT (withDI callback) suppliedState
