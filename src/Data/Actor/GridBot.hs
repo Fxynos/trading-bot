@@ -64,9 +64,9 @@ instance (Exchange e) => Bot (GridBot e) where
                 else do
                     liftIO $ info logger tag "Sell FOK order fulfilled."
                     updateState bot Up
-        else if rate - (cell state) <= gap bot then do -- rate fell
+        else if (cell state) - rate >= gap bot then do -- rate fell
             let quoteAmount = balanceOf (getQuoteCurrency bot) (balance state) -- balance of quote currency
-            let baseAvailable = quoteAmount * rate -- max order amount in base currency
+            let baseAvailable = quoteAmount / rate -- max order amount in base currency
 
             liftIO $ debug logger tag $
                 "Rate overcame another cell of grid at the bottom: " ++
