@@ -19,7 +19,7 @@ import Control.Monad.Reader.Class
 data GridBot e = GridBot {
     exchange :: e,
     gap :: Float,
-    orderAmount :: Float,
+    orderAmount :: Float, -- in base currency
     baseCurrency :: Currency,
     quoteCurrency :: Currency
 }
@@ -40,26 +40,24 @@ instance (Exchange e) => Bot (GridBot e) where
         rate <- getRate (exchange bot) (getBaseCurrency bot) (getQuoteCurrency bot)
 
         if rate - (cell state) >= gap bot then do -- rate grew up
-            let baseVolume = balanceOf (getBaseCurrency bot) (balance state) -- balance of base currency
-            let baseAmount = baseVolume / rate -- convert to quote currency
+            let baseAvailable = balanceOf (getBaseCurrency bot) (balance state) -- balance of base currency
 
             liftIO $ debug logger tag $
                 "Rate overcame another cell of grid at the top: " ++
                 (show rate) ++
                 ". We're about to sell " ++
-                (show $ orderAmount bot) ++
+                (show $ orderAmount bot) ++ " " ++ (getBaseCurrency bot) ++
                 " while " ++
-                (show baseAmount) ++
-                " is available (amounts represented in quote currency)."
+                (show baseAvailable) ++ " " ++ (getBaseCurrency bot) ++
+                " is available."
 
-            if baseAmount < orderAmount bot then
+            if baseAvailable < orderAmount bot then
                 liftIO $ warn logger tag "Skip because of insufficient balance."
             else do
                 liftIO $ debug logger tag "Placing FOK order..."
 
-                -- TODO think about making `rate * fraction` in order to increase fulfill probability or making retries
                 isFulfilled <- placeFokOrder (exchange bot) (getBaseCurrency bot) (getQuoteCurrency bot)
-                    Sell (orderAmount bot) rate
+                    Sell (orderAmount bot) (cell state + gap bot)
 
                 if not isFulfilled then
                     liftIO $ warn logger tag "Skip, because FOK order couldn't be fulfilled."
@@ -67,25 +65,27 @@ instance (Exchange e) => Bot (GridBot e) where
                     liftIO $ info logger tag "Sell FOK order fulfilled."
                     updateState bot Up
         else if rate - (cell state) <= gap bot then do -- rate fell
-            let baseAmount = balanceOf (getQuoteCurrency bot) (balance state) -- balance of quote currency
+            let quoteAmount = balanceOf (getQuoteCurrency bot) (balance state) -- balance of quote currency
+            let baseAvailable = quoteAmount * rate -- max order amount in base currency
 
             liftIO $ debug logger tag $
                 "Rate overcame another cell of grid at the bottom: " ++
                 (show rate) ++
                 ". We're about to buy " ++
-                (show $ orderAmount bot) ++
+                (show $ orderAmount bot) ++ " " ++ (getBaseCurrency bot) ++
                 " while " ++
-                (show baseAmount) ++
-                " is available (amounts represented in quote currency)."
+                (show baseAvailable) ++ " " ++ (getBaseCurrency bot) ++
+                " is max available amount to be purchased (" ++
+                (show quoteAmount) ++ " " ++ (getQuoteCurrency bot) ++
+                ")."
 
-            if baseAmount < orderAmount bot then
+            if baseAvailable < orderAmount bot then
                 liftIO $ warn logger tag "Skip because of insufficient balance."
             else do
                 liftIO $ debug logger tag "Placing FOK order..."
 
-                -- TODO think about making `rate * fraction` in order to increase fulfill probability or making retries
                 isFulfilled <- placeFokOrder (exchange bot) (getBaseCurrency bot) (getQuoteCurrency bot)
-                    Buy (orderAmount bot) rate
+                    Buy (orderAmount bot) (cell state - gap bot)
 
                 if not isFulfilled then
                     liftIO $ warn logger tag "Skip, because FOK order couldn't be fulfilled."

@@ -19,8 +19,8 @@ printHelp :: IO ()
 printHelp = putStrLn "\n[Help]\
     \\nExpected arguments:\
     \\n--tick - invalidation period in ms, e.g. 15000\
-    \\n--gap - cell gap in USDT, e.g. 0.5\
-    \\n--amount - order amount in USDT, e.g. 5.0\
+    \\n--gap - cell gap in quote currency, e.g. 0.5\
+    \\n--amount - order amount in base currency, e.g. 5.0\
     \\n--base - base currency, e.g. DNX\
     \\n--quote - quote currency, e.g. USDT\
     \\n--id - CoinEx access id\
@@ -32,8 +32,8 @@ printConfig :: Config -> IO ()
 printConfig config = putStrLn (
     "\n[Configuration]" ++
     "\nTick (ms): " ++ (show $ tick config) ++
-    "\nGap (USDT): " ++ (show $ gap config) ++
-    "\nAmount (USDT): " ++ (show $ amount config) ++
+    "\nGap (quote currency): " ++ (show $ gap config) ++
+    "\nOrder amount (base currency): " ++ (show $ amount config) ++
     "\nBase currency: " ++ (baseCurrency config) ++
     "\nQuote currency: " ++ (quoteCurrency config) ++
     "\nCoinEx access id: " ++ (mask $ accessId config) ++
