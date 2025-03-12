@@ -12,6 +12,7 @@ data Event = START | INVALIDATE | STOP deriving Show
 joinIntervalLoop :: Int -> Handler (IO ()) -> IO ()
 joinIntervalLoop intervalMs handle = do
     handle START
+    handle INVALIDATE
 
     timer <- repeatedTimer (handle INVALIDATE) (msDelay $ fromIntegral intervalMs) :: IO TimerIO
     getLine -- wait until enter key is pressed to safely exit
