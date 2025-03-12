@@ -4,18 +4,19 @@
 
 ## Run
 
-### Help
-
-To see help message:
+- To see help message:
 ```bash
 stack run
 ```
 
-### Launch bot
-
-To launch trading bot:
+- To launch trading bot:
 ```bash
 stack run -- --tick 15000 --gap 1.5 --amount 4.5 --base DNX --quote USDT --id 0123456789ABCDEF --key 0123456789ABCDEF 
+```
+
+- To filter logs:
+```bash
+grep -E "^[^ ]* [^ ]* *(INFO|WARNING|ERROR)" temp/log.txt
 ```
 
 ## Dependencies
