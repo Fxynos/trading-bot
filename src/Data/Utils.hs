@@ -1,5 +1,5 @@
 module Data.Utils (
-    UnimplementedException(..), getOrThrow,
+    UnimplementedException(..), RuntimeException(..), getOrThrow,
     lazyByteString, fromLazyByteString,
     byteString, fromByteString
 ) where
@@ -12,6 +12,9 @@ import qualified Data.ByteString.Char8 as BC
 
 data UnimplementedException = UnimplementedException deriving Show
 instance Exception UnimplementedException
+
+data RuntimeException = RuntimeException deriving Show
+instance Exception RuntimeException
 
 getOrThrow :: Exception e => e -> Maybe a -> a
 getOrThrow _ (Just a) = a

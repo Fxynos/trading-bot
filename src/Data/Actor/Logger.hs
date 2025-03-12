@@ -54,4 +54,4 @@ fillLengthUpTo len s
 currentTimestamp :: IO String
 currentTimestamp = do
     time <- getCurrentTime
-    return $ formatTime defaultTimeLocale "%H:%M:%S %d.%m.%Y" time
+    return $ formatTime defaultTimeLocale "%Y.%m.%d %H:%M:%S" time

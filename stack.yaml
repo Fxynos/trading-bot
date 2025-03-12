@@ -65,3 +65,7 @@ packages:
 #
 # Allow a newer minor version of GHC than the snapshot specifies
 # compiler-check: newer-minor
+
+extra-deps:
+  - timers-0.2.0.4
+  - suspend-0.2.0.0 # transitive from `timers`

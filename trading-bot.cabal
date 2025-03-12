@@ -36,9 +36,12 @@ executable trading-bot-exe
       Domain.Actor.StateDataSource
       Domain.DI
       Domain.Entity.Amount
-      Domain.Entity.Currency
       Domain.Entity.Market
       Domain.Entity.State
+      Presentation.Config
+      Presentation.DI
+      Presentation.EventLoop
+      Presentation.UI
       Paths_trading_bot
   autogen-modules:
       Paths_trading_bot
@@ -55,7 +58,9 @@ executable trading-bot-exe
     , directory >=1.3.8.5
     , http-conduit >=2.3.9
     , mtl >=2.3.1
+    , suspend >=0.2.0.0
     , time >=1.12.2
+    , timers >=0.2.0.4
   default-language: Haskell2010
 
 test-suite trading-bot-test

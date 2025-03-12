@@ -4,18 +4,19 @@
 
 ## Run
 
-### Help
-
-To see help message:
+- To see help message:
 ```bash
 stack run
 ```
 
-### Launch bot
-
-To launch trading bot:
+- To launch trading bot:
 ```bash
-stack run -- --tick 15000 --gap 0.1 --amount 5
+stack run -- --tick 15000 --gap 1.5 --amount 4.5 --base DNX --quote USDT --id 0123456789ABCDEF --key 0123456789ABCDEF 
+```
+
+- To filter logs:
+```bash
+grep -E "^[^ ]* [^ ]* *(INFO|WARNING|ERROR)" temp/log.txt
 ```
 
 ## Dependencies
@@ -24,10 +25,11 @@ stack run -- --tick 15000 --gap 0.1 --amount 5
 - `bytestring` and `case-insensitive` as transitive dependencies of `http-conduit`
 - `aeson` provides such things like `FromJSON` and `ToJSON` useful for serializing DTO's.
 - `SHA` helps with authorized requests to CoinEx, that must be signed with secret key using HMAC.
-- `mtl` provides `Reader` to implement dependency injection.
+- `mtl` provides `Reader` to implement dependency injection and `State` for state management.
 - `time` is used by logger for timestamps.
 - `containers` provides `Map`.
 - `directory` provides `doesFileExist` function.
+- `timers`, `suspend` provide `Timer` and `Delay` for [EventLoop](src/Presentation/EventLoop.hs).
 
 ## Language extensions
 
@@ -42,5 +44,5 @@ stack run -- --tick 15000 --gap 0.1 --amount 5
 - `DuplicateRecordFields` allows to use the same field name in different data records.
 - `ExistentialQuantification` allows to add constraints in `data` declaration in order to hide type param, but still enforce the constraint.
 - `GADTs` enables support for polymorphism in `data` fields.
-- `ConstraintKinds, FlexibleContexts` enable support for **constraint tuples** (used with `type`).
+- `ConstraintKinds`, `FlexibleContexts` enable support for **constraint tuples** (used with `type`).
 - `NumericUnderscores` allows underscore syntax for number literals (`100_000`). 

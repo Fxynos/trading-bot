@@ -1,10 +1,10 @@
-{-# LANGUAGE OverloadedStrings, DeriveGeneric, ScopedTypeVariables, InstanceSigs, DuplicateRecordFields #-}
+{-# LANGUAGE OverloadedStrings, DeriveGeneric, ScopedTypeVariables, InstanceSigs, DuplicateRecordFields, FlexibleContexts #-}
 
 module Data.Actor.CoinExExchange (CoinExExchange(..), ping, prepare, signRequest) where
 
+import Domain.DI
 import Domain.Actor.Exchange
 import Domain.Entity.Amount
-import Domain.Entity.Currency
 import Data.Network
 import Data.Utils (UnimplementedException(..), lazyByteString, fromLazyByteString, fromByteString)
 
@@ -18,7 +18,7 @@ import Data.Digest.Pure.SHA
 data CoinExExchange = CoinExExchange { accessId :: String, secretKey :: String }
 
 instance Exchange CoinExExchange where
-    getBalance :: forall m. (MonadIO m) => CoinExExchange -> m [Amount]
+    getBalance :: forall m. (MonadIO m, HasDI m) => CoinExExchange -> m [Amount]
     getBalance exchange = do
         request <- signRequest exchange RequestParams {
             method = "GET",
@@ -30,7 +30,7 @@ instance Exchange CoinExExchange where
         response <- makeRequest request :: m (StatusResponse [AmountDto])
         return $ map amountToDomain (payload response)
 
-    getRate :: forall m. (MonadIO m) => CoinExExchange -> Currency -> Currency -> m Amount
+    getRate :: forall m. (MonadIO m, HasDI m) => CoinExExchange -> Currency -> Currency -> m Float
     getRate exchange baseCurrency quoteCurrency = do
         request <- signRequest exchange RequestParams {
             method = "GET",
@@ -40,9 +40,9 @@ instance Exchange CoinExExchange where
             body = Nothing :: Maybe Value
         }
         response <- makeRequest request :: m (StatusResponse [RateDto])
-        return Amount { currency = baseCurrency, value = getValue $ head $ payload response }
+        return $ getValue $ head $ payload response
 
-    placeFokOrder :: forall m. (MonadIO m) => CoinExExchange -> Currency -> Currency -> OrderSide -> Float -> Float -> m Bool
+    placeFokOrder :: forall m. (MonadIO m, HasDI m) => CoinExExchange -> Currency -> Currency -> OrderSide -> Float -> Float -> m Bool
     placeFokOrder exchange baseCurrency quoteCurrency side baseCurrencyAmount price = do
         request <- signRequest exchange RequestParams {
             method = "POST",
@@ -68,7 +68,7 @@ instance Exchange CoinExExchange where
 -- Service requests --
 
 {- @return "pong" as well -}
-ping :: forall m. (MonadIO m) => m String
+ping :: forall m. (MonadIO m, HasDI m) => m String
 ping = do
     response <- makeRequest RequestParams {
         method = "GET",
@@ -80,7 +80,7 @@ ping = do
     return $ result $ payload response
 
 {- @return exchange system time in unix ms -}
-systemTime :: forall m. (MonadIO m) => m Integer
+systemTime :: forall m. (MonadIO m, HasDI m) => m Integer
 systemTime = do
     response <- makeRequest RequestParams {
         method = "GET",
@@ -94,7 +94,7 @@ systemTime = do
 -- Auth --
 
 {- Replaces [headers] completely. -}
-signRequest :: (MonadIO m, ToJSON b) => CoinExExchange -> RequestParams b -> m (RequestParams b)
+signRequest :: (MonadIO m, HasDI m, ToJSON b) => CoinExExchange -> RequestParams b -> m (RequestParams b)
 signRequest exchange params = do
     timestamp <- systemTime
     return RequestParams {

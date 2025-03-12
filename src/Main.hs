@@ -1,114 +1,97 @@
-{-# LANGUAGE FlexibleContexts #-}
-
 module Main (main) where
 
-import Domain.Entity.State
-import Domain.Entity.Amount
+import Presentation.Config as Config
+import Presentation.UI
+import Presentation.DI
+import Presentation.EventLoop
+
+import Domain.Entity.State as State
 import Domain.Actor.Exchange
+import Domain.Actor.Bot
 import Data.Actor.CoinExExchange as CoinExExchange
 import Domain.Actor.Logger
 import Data.Actor.Logger
 import Domain.DI
-import Domain.Actor.StateDataSource
+import Domain.Actor.StateDataSource as StateDataSource
 import Data.Actor.FileStateDataSource
+import Data.Utils (getOrThrow, RuntimeException(..))
 
 import Control.Monad.Reader
-import System.Environment
-import Data.Map as Map
+import Control.Monad.State
 
 main :: IO ()
 main = do
-    -- retrieve args --
+    -- get CLI args
+    unresolvedConfig <- args :: IO (Maybe Config)
+    case unresolvedConfig of
+        Nothing -> printHelp
+        Just _ -> do
+            let config = getOrThrow RuntimeException unresolvedConfig
+            printConfig config
 
-    rawArgs <- getArgs :: IO [String]
-    let args = asMap rawArgs :: Map String String
+            -- resolve dependencies
+            let logger = injectLogger
+            let exchange = injectExchange config
+            let stateSource = injectStateSource
+            let bot = injectBot config
+            let withDI = \f -> runReaderT f $ DependencyHolder logger
 
-    let resolvedArgs = combine [
-            (Map.lookup "--tick" args),
-            (Map.lookup "--gap" args),
-            (Map.lookup "--amount" args),
-            (Map.lookup "--currency" args)
-            ] :: Maybe [String]
+            info logger tag "Starting..."
+            debug logger tag $ show (config :: Config)
 
-    case resolvedArgs of
-        Nothing -> showHelp
-        Just [tickStr, gapStr, amountStr, currency] -> do
-            let tick = read tickStr :: Int
-            let gap = read gapStr :: Float
-            let amount = read amountStr :: Float
+            -- check exchange
+            debug logger tag "Checking if exchange is reachable..."
+            pong <- withDI CoinExExchange.ping
+            if pong /= "pong" then
+                err logger tag "Exchange unavailable. Stop."
+            else do
+                -- join event loop
+                debug logger tag "Exchange responded. Join event loop. Press enter key to safely exit."
+                let handler = \event -> do
+                        debug logger tag ("Handle \"" ++ (show event) ++ "\" looper event.")
 
-            putStrLn (
-                "[Configuration]" ++
-                "\nTick (ms): " ++ (show tick) ++
-                "\nGap (USDT): " ++ (show gap) ++
-                "\nAmount (USDT): " ++ (show amount) ++
-                "\nBase currency: " ++ currency ++
-                "\nQuote currency: USDT"
-                )
+                        let callback =
+                                case event of
+                                    START -> onCreate bot
+                                    INVALIDATE -> invalidate bot
+                                    STOP -> finish bot
 
-            -- restore state --
+                        hasState <- liftIO $ has stateSource
+                        suppliedState <-
+                            if hasState then liftIO $ do
+                                debug logger tag "Restoring saved state..."
+                                state <- StateDataSource.get stateSource
+                                return state
+                            else do
+                                debug logger tag "No saved state. Fetching data from exchange..."
+                                rate <- withDI $ getRate exchange (Config.baseCurrency config) (Config.quoteCurrency config)
+                                balance <- withDI $ getBalance exchange
+                                return State {
+                                    State.baseCurrency = Config.baseCurrency config,
+                                    State.quoteCurrency = Config.quoteCurrency config,
+                                    cell = rate,balance = balance
+                                }
 
-            let stateSource = FileStateDataSource { filePath = "temp/state.json" }
-            hasState <- has stateSource
-            state <- case hasState of
-                True -> get stateSource
-                False -> do
-                    return State {
-                        baseCurrency = currency,
-                        rate = 0.05,
-                        balance = []
-                    } -- TODO fetch current rate and balance
+                        if not (suppliedState `correspondsTo` config) then
+                            err logger tag
+                                "Saved state doesn't correspond to the current configuration. \
+                                \Use the same currencies or remove stale state."
+                        else do
+                            debug logger tag "State supplied."
+                            producedState <- execStateT (withDI callback) suppliedState
+                            debug logger tag "Saving state..."
+                            liftIO $ set stateSource producedState
+                            debug logger tag "Saved."
+                            return ()
 
-            putStrLn ((++) "Restored rate: " $ show $ rate state)
-
-            set stateSource state
-
-{- Usage: `runReaderT checkLogger $ DependencyHolder logger` -}
-checkLogger :: AppMonad m => m () -- TODO remove after debug
-checkLogger = do
-    logger <- asks logger
-    liftIO $ do
-        info logger tag "Start"
-        warn logger tag "Sample warning message"
-        err logger tag "Sample error message"
-
-exchange :: CoinExExchange
-exchange = CoinExExchange {
-   accessId = "your-value",
-   secretKey = "your-value"
-}
+                joinIntervalLoop (tick config) handler
+                info logger tag "Finished."
 
 -- Utils --
 
-{- Asserts that all the items are present, otherwise returns `Nothing` -}
-combine :: [Maybe a] -> Maybe [a]
-combine (Nothing : _) = Nothing
-combine [] = Just []
-combine (Just current : next) = do
-    nextCombined <- combine next
-    return (current : nextCombined)
-
-{- Parses args list as key-value pairs -}
-asMap :: [String] -> Map String String
-asMap list =
-    let indexed = zip [0 ..] list :: [(Int, String)]
-        keys = [key | (index, key) <- indexed, mod index 2 == 0] :: [String]
-        values = [value | (index, value) <- indexed, mod index 2 /= 0] :: [String]
-        entries = zip keys values :: [(String, String)]
-    in fromList entries
-
-showBalance :: [Amount] -> String
-showBalance [] = ""
-showBalance balance =
-    let lines = [(currency amount) ++ ": " ++ (show $ value amount) | amount <- balance]
-    in Prelude.foldl (\line1 line2 -> line1 ++ "\n" ++ line2) (head lines) (tail lines)
-
-showHelp :: IO ()
-showHelp = putStrLn "Expected arguments:\
-\n--tick - invalidation period in ms, e.g. 15000\
-\n--gap - cell gap in USDT, e.g. 0.5\
-\n--amount - order amount in USDT, e.g. 5.0\
-\n--currency - base currency (and quote currency is fixed to USDT)"
+correspondsTo :: State.State -> Config -> Bool
+state `correspondsTo` config = -- backticks "`" mark function as infix
+    State.baseCurrency state == Config.baseCurrency config && State.quoteCurrency state == Config.quoteCurrency config
 
 -- Constants --
 

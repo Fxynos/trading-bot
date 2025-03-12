@@ -50,6 +50,8 @@ executables:
     - time >= 1.12.2
     - containers >= 0.6.8
     - directory >= 1.3.8.5
+    - timers >= 0.2.0.4
+    - suspend >= 0.2.0.0
 
 tests:
   trading-bot-test:
