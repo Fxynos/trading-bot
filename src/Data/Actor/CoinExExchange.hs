@@ -4,11 +4,13 @@ module Data.Actor.CoinExExchange (CoinExExchange(..), ping, prepare, signRequest
 
 import Domain.DI
 import Domain.Actor.Exchange
+import Domain.Actor.Logger
 import Domain.Entity.Amount
 import Data.Network
 import Data.Utils (UnimplementedException(..), lazyByteString, fromLazyByteString, fromByteString)
 
 import Control.Exception
+import Control.Monad.Reader
 import GHC.Generics
 import Data.Aeson
 import Data.Aeson.Types
@@ -60,7 +62,8 @@ instance Exchange CoinExExchange where
             }
         }
         response <- makeRequest request :: m (StatusResponse Value)
-        liftIO $ putStrLn ("\nFOK: (" ++ (show $ code response) ++ ") " ++ (message response)) -- TODO logger
+        logger <- asks logger
+        liftIO $ debug logger tag ("Placing FOK order result: (" ++ (show $ code response) ++ ") " ++ (message response))
         return (code response == 0)
 
     getMarket exchange baseCurrency quoteCurrency = throw UnimplementedException
@@ -200,6 +203,9 @@ amountToDomain (AmountDto available _ currency) =
     in Amount currency value
 
 -- Constants --
+
+tag :: String
+tag = "CoinExExchange"
 
 windowTimeMs :: Int
 windowTimeMs = 5000

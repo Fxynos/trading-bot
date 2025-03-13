@@ -8,7 +8,6 @@ import Domain.DI
 
 import Control.Monad.IO.Class
 
--- TODO use IO directly
 class Exchange e where
     getBalance :: (MonadIO m, HasDI m) => e -> m [Amount]
     getRate :: (MonadIO m, HasDI m) => e -> Currency -> Currency -> m Float
